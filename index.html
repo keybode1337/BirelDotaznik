@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Anketa příchutí</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="poll">
+    <div class="poll__overlay"></div>
+    <div class="poll__content">
+      <h1 class="poll__title">Hlasujte pro své oblíbené příchutě</h1>
+
+      <div class="poll__add">
+        <input
+          type="text"
+          id="newFlavor"
+          class="poll__input"
+          placeholder="Navrhněte příchuť..."
+        />
+        <button id="addFlavorBtn" class="poll__btn poll__btn--add">
+          Navrhnout
+        </button>
+      </div>
+
+      <ul id="flavorList" class="poll__list"></ul>
+
+      <button id="voteBtn" class="poll__btn poll__btn--vote">
+        Odeslat hlasování
+      </button>
+
+      <p id="voteInfo" class="poll__info">Hlasováno: 0/2</p>
+      <p id="addInfo" class="poll__info">Navrženo: 0/2</p>
+
+      <footer class="poll__footer">
+        <button id="devBtn" class="poll__btn poll__btn--dev">dev</button>
+      </footer>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
