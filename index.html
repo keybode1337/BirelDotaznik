@@ -1,44 +1,137 @@
-<!DOCTYPE html>
-<html lang="cs">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Anketa příchutí</title>
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <div class="poll">
-    <div class="poll__overlay"></div>
-    <div class="poll__content">
-      <h1 class="poll__title">Hlasujte pro své oblíbené příchutě</h1>
+import { useState, useEffect, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Trash, Trash2, CheckCircle, Moon, Sun, Menu, Clock, BarChart, BookOpen } from "lucide-react";
 
-      <div class="poll__add">
-        <input
-          type="text"
-          id="newFlavor"
-          class="poll__input"
-          placeholder="Navrhněte příchuť..."
-        />
-        <button id="addFlavorBtn" class="poll__btn poll__btn--add">
-          Navrhnout
-        </button>
+export default function TodoApp() {
+  const [tasks, setTasks] = useState([]);
+  const [newTask, setNewTask] = useState("");
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem("darkMode") === "true");
+  const [confirmDelete, setConfirmDelete] = useState(new Set());
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [page, setPage] = useState("todo");
+  const menuRef = useRef(null);
+
+  useEffect(() => {
+    try {
+      const savedTasks = JSON.parse(localStorage.getItem("tasks")) || [];
+      setTasks(savedTasks);
+    } catch (error) {
+      console.error("Error parsing tasks from localStorage", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+    localStorage.setItem("darkMode", darkMode);
+  }, [tasks, darkMode]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (menuRef.current && !menuRef.current.contains(event.target)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const addTask = () => {
+    const trimmedTask = newTask.trim();
+    if (trimmedTask) {
+      setTasks([...tasks, { text: trimmedTask, completed: false }]);
+      setNewTask("");
+    }
+  };
+
+  const toggleComplete = (index) => {
+    setTasks(tasks.map((task, i) => (i === index ? { ...task, completed: !task.completed } : task)));
+  };
+
+  const removeTask = (index) => {
+    if (confirmDelete.has(index)) {
+      setTasks(tasks.filter((_, i) => i !== index));
+      setConfirmDelete((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        return newSet;
+      });
+    } else {
+      setConfirmDelete((prev) => new Set(prev).add(index));
+    }
+  };
+
+  const openTasks = tasks.filter((task) => !task.completed).length;
+  const doneTasks = tasks.filter((task) => task.completed).length;
+
+  const renderPage = () => {
+    switch (page) {
+      case "pomodoro":
+        return <h2 className="text-2xl">Pomodoro Timer Coming Soon...</h2>;
+      case "habit":
+        return <h2 className="text-2xl">Habit Tracker Coming Soon...</h2>;
+      case "budget":
+        return <h2 className="text-2xl">Budget Tracker Coming Soon...</h2>;
+      case "journal":
+        return <h2 className="text-2xl">Daily Journal Coming Soon...</h2>;
+      default:
+        return (
+          <>
+            <h1 className="text-3xl font-bold mb-6">Minimalist To-Do List</h1>
+            <p className="mb-4">Open: {openTasks} | Done: {doneTasks}</p>
+            <div className="flex gap-2 w-full max-w-md">
+              <Input 
+                value={newTask} 
+                onChange={(e) => setNewTask(e.target.value)} 
+                placeholder="Add a new task..." 
+                className="flex-1" 
+              />
+              <Button onClick={addTask} className="bg-gray-200 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-500 transition-all">Add</Button>
+            </div>
+            <ul className="mt-4 w-full max-w-md">
+              <AnimatePresence>
+                {tasks.map((task, index) => (
+                  <motion.li 
+                    key={index} 
+                    initial={{ opacity: 0, y: -10 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    exit={{ opacity: 0, y: 10 }}
+                    className="mt-3">
+                    <Card className={`rounded-lg border text-card-foreground shadow-sm transition-all ${task.completed ? "bg-[#9ef7b7] dark:bg-[#9ef7b7]" : "hover:bg-[#ededed] dark:hover:bg-[#ededed]"}`}>
+                      <CardContent className="flex justify-between p-3">
+                        <span className={task.completed ? "line-through text-green-600" : ""}>{task.text}</span>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" onClick={() => toggleComplete(index)} className="hover:text-green-500">
+                            <CheckCircle size={16} />
+                          </Button>
+                          <Button variant="ghost" onClick={() => removeTask(index)} className="hover:text-red-500">
+                            {confirmDelete.has(index) ? <Trash2 size={16} className="text-red-600" /> : <Trash size={16} />}
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.li>
+                ))}
+              </AnimatePresence>
+            </ul>
+          </>
+        );
+    }
+  };
+
+  return (
+    <div className={`min-h-screen flex flex-col items-center justify-center p-6 transition-all ${darkMode ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-900"}`}>
+      <div className="absolute top-5 right-5 flex gap-2" ref={menuRef}>
+        <Button onClick={() => setDarkMode(!darkMode)} className="bg-gray-200 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-500 transition-all p-3 rounded-lg">
+          {darkMode ? <Sun size={24} /> : <Moon size={24} />}
+        </Button>
+        <Button onClick={() => setMenuOpen(!menuOpen)} className="bg-gray-200 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-500 transition-all p-3 rounded-lg">
+          <Menu size={28} />
+        </Button>
       </div>
-
-      <ul id="flavorList" class="poll__list"></ul>
-
-      <button id="voteBtn" class="poll__btn poll__btn--vote">
-        Odeslat hlasování
-      </button>
-
-      <p id="voteInfo" class="poll__info">Hlasováno: 0/2</p>
-      <p id="addInfo" class="poll__info">Navrženo: 0/2</p>
-
-      <footer class="poll__footer">
-        <button id="devBtn" class="poll__btn poll__btn--dev">dev</button>
-      </footer>
+      {renderPage()}
     </div>
-  </div>
-
-  <script src="script.js"></script>
-</body>
-</html>
+  );
+}
